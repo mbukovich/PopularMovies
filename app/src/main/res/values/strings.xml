@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">PopularMovies</string>
+
+    <!-- Place your TMDB API key in the following string -->
+    <string name="tmdb_key"></string>
+
+    <!-- The following strings are used for building api queries -->
+    <string name="base_url">https://api.themoviedb.org/3</string>
+    <string name="image_base_url">https://image.tmdb.org/t/p</string>
+    <string name="popular_path">popular</string>
+    <string name="rating_path">top_rated</string>
+    <string name="movie_path">movie</string>
+    <string name="language">en-US</string>
+    <string name="page">1</string>
+    <string name="image_size">w185</string>
+
+    <!-- Query Parameters -->
+    <string name="key_param">api_key</string>
+    <string name="language_param">language</string>
+    <string name="page_param">page</string>
+
+    <!-- Json keys -->
+    <string name="map_poster">poster_path</string>
+    <string name="map_id">id</string>
+    <string name="map_title">title</string>
+    <string name="map_vote_avg">vote_average</string>
+    <string name="map_release">release_date</string>
+    <string name="map_synopsis">overview</string>
+
+    <!-- Small String array to populate the Spinner Adapter -->
+    <string name="error_nothing_selected">Please select a sort option.</string>
+
+    <!-- error messages -->
+    <string name="error_no_data">Error retrieving data.</string>
+    <string-array name="sort_array">
+        <item>Most Popular</item>
+        <item>Top Rated</item>
+    </string-array>
+</resources>
