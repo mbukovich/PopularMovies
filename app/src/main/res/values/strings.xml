@@ -28,12 +28,13 @@
     <string name="map_synopsis">overview</string>
 
     <!-- Small String array to populate the Spinner Adapter -->
-    <string name="error_nothing_selected">Please select a sort option.</string>
-
-    <!-- error messages -->
-    <string name="error_no_data">Error retrieving data.</string>
     <string-array name="sort_array">
         <item>Most Popular</item>
         <item>Top Rated</item>
     </string-array>
+
+    <!-- error messages -->
+    <string name="error_no_data">Error retrieving data.</string>
+    <string name="error_nothing_selected">Please select a sort option.</string>
+
 </resources>

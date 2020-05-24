@@ -73,20 +73,22 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     @Override
     public void onClick(int itemNumber) {
-        // We get the data to send to the Movie Detail Activity from our HashMap and store it into
-        // a String array
-        String[] details = new String[6];
-        details[0] = dataMap.get(this.getResources().getString(R.string.map_poster))[itemNumber];
-        details[1] = dataMap.get(this.getResources().getString(R.string.map_id))[itemNumber];
-        details[2] = dataMap.get(this.getResources().getString(R.string.map_release))[itemNumber];
-        details[3] = dataMap.get(this.getResources().getString(R.string.map_synopsis))[itemNumber];
-        details[4] = dataMap.get(this.getResources().getString(R.string.map_vote_avg))[itemNumber];
-        details[5] = dataMap.get(this.getResources().getString(R.string.map_title))[itemNumber];
+        if (!dataMap.isEmpty()) {
+            // We get the data to send to the Movie Detail Activity from our HashMap and store it into
+            // a String array as long as our HashMap has data
+            String[] details = new String[6];
+            details[0] = dataMap.get(this.getResources().getString(R.string.map_poster))[itemNumber];
+            details[1] = dataMap.get(this.getResources().getString(R.string.map_id))[itemNumber];
+            details[2] = dataMap.get(this.getResources().getString(R.string.map_release))[itemNumber];
+            details[3] = dataMap.get(this.getResources().getString(R.string.map_synopsis))[itemNumber];
+            details[4] = dataMap.get(this.getResources().getString(R.string.map_vote_avg))[itemNumber];
+            details[5] = dataMap.get(this.getResources().getString(R.string.map_title))[itemNumber];
 
-        // Now we create the intent and pass the String array to the Movie Detail Activity
-        Intent detailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
-        detailIntent.putExtra("array",details);
-        startActivity(detailIntent);
+            // Now we create the intent and pass the String array to the Movie Detail Activity
+            Intent detailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
+            detailIntent.putExtra("array",details);
+            startActivity(detailIntent);
+        }
     }
 
     public class MovieQueryTask extends AsyncTask<String, Void, HashMap<String, String[]>> {
@@ -96,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             super.onPreExecute();
             progressBar.setVisibility(View.VISIBLE);
             errorTextView.setVisibility(View.INVISIBLE);
+            movieRecycler.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -116,19 +119,26 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 return MovieJsonUtil.getMovieDataFromJson(MainActivity.this, movieData);
             } catch (Exception e) {
                 e.printStackTrace();
-                return null;
+                return new HashMap<String, String[]>();
             }
         }
 
         @Override
         protected void onPostExecute(HashMap<String, String[]> map) {
             progressBar.setVisibility(View.INVISIBLE);
-            if (map.isEmpty()) {
+            System.out.println(map.toString());
+            if (!map.isEmpty()) {
+                // If we obtained data from the connection, we send the image path to our recycler view.
+                movieAdapter.setPosters(map.get(MainActivity.this.getResources().getString(R.string.map_poster)));
+            }
+            else {
                 // This block executes to display an error message if no data was retrieved
+                System.out.println("testing to see if this block is being executed.");
+                movieRecycler.setVisibility(View.INVISIBLE);
                 errorTextView.setText(MainActivity.this.getResources().getString(R.string.error_no_data));
                 errorTextView.setVisibility(View.VISIBLE);
             }
-            movieAdapter.setPosters(map.get(MainActivity.this.getResources().getString(R.string.map_poster)));
+
             dataMap = map;
             super.onPostExecute(map);
         }
@@ -138,7 +148,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         @Override
         public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
-            backgroundQueryTask.cancel(true); // to prevent many AsyncTasks from being spammed in
             if (pos == 0) {
                 backgroundQueryTask = new MovieQueryTask();
                 backgroundQueryTask.execute(MainActivity.this.getResources().getString(R.string.popular_path));
