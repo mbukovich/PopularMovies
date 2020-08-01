@@ -18,7 +18,8 @@
                 android:id="@+id/detail_poster_image"
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
-                android:padding="16dp"/>
+                android:padding="16dp"
+                android:contentDescription="Movie Poster Image"/>
             <TextView
                 android:id="@+id/tv_detail_title"
                 android:layout_width="wrap_content"
@@ -62,6 +63,10 @@
                     android:layout_margin="10dp"
                     android:textSize="15sp" />
             </LinearLayout>
+            <Button
+                android:id="@+id/btn_favorite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -75,6 +80,30 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
                 android:textSize="15sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:text="Trailers: " />
+            <ListView
+                android:id="@+id/lv_trailers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:text="Reviews: " />
+            <ListView
+                android:id="@+id/lv_reviews"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp" />
         </LinearLayout>
     </ScrollView>
 

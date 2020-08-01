@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -63,7 +64,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         movieAdapter = new MovieAdapter(this);
 
         movieRecycler.setAdapter(movieAdapter);
-        movieRecycler.setLayoutManager(new GridLayoutManager(this, 2));
+
+        // The following adapts the grid to the screen width.
+        DisplayMetrics displayMetrics = this.getResources().getDisplayMetrics();
+        float width = displayMetrics.widthPixels / displayMetrics.density;
+        int colNum = (int) (width / 200);
+        if (colNum < 2) colNum = 2;
+        movieRecycler.setLayoutManager(new GridLayoutManager(this, colNum));
         movieRecycler.setHasFixedSize(true);
 
         String sortSelection = getString(R.string.popular_path);

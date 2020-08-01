@@ -40,18 +40,30 @@ public class MovieDetailActivity extends AppCompatActivity {
         if (intent.hasExtra("array")) {
             String[] movieData = intent.getStringArrayExtra("array");
             URL imageURL = NetworkUtils.buildPosterUrl(this, movieData[0]);
+            // TODO find out if this movie is a favorite and save to a Boolean variable
+
+            // TODO if the movie is a favorite, then load the image from the database instead of from the web
             Picasso.get().load(imageURL.toString()).fit().centerInside().into(posterView);
+
+            // TODO if the movie is a favorite, then update the text of the favorite button to "unfavorite", else set text to "favorite"
 
             releaseDateView.setText(movieData[2]);
             synopsisView.setText(movieData[3]);
             ratingView.setText(movieData[4]);
             titleView.setText(movieData[5]);
+
+            // TODO if the device has data connectivity, then start an Async Task to query the API to get video trailers
+            // TODO if the device has data connectivity, then start an Async Task to query the API to get video reviews
+
+            // TODO add click functionality to the favorite button to add or remove the movie from the database and change color of the button
         }
         else {
             releaseDateView.setText("No Data Found.");
             synopsisView.setText("No Data Found.");
             ratingView.setText("No Data Found.");
             titleView.setText("No Data Found.");
+
+            // TODO hide the favorite button
         }
     }
 }
