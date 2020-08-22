@@ -31,7 +31,12 @@
     <string-array name="sort_array">
         <item>Most Popular</item>
         <item>Top Rated</item>
+        <item>Favorites</item>
     </string-array>
+
+    <!-- Text for the favorite button in MovieDetailActivity -->
+    <string name="unfavorite">Click to Remove \n From Favorites</string>
+    <string name="addfavorite">Add to Favorites</string>
 
     <!-- error messages -->
     <string name="error_no_data">Error retrieving data.</string>

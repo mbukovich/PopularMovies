@@ -20,7 +20,7 @@ public class FavoriteMovie {
     private String imagePath;
 
     @Ignore
-    FavoriteMovie(int movieAPIid, String movieTitle, String movieDate, float movieRating, String movieDesc, String movieImage) {
+    public FavoriteMovie(int movieAPIid, String movieTitle, String movieDate, float movieRating, String movieDesc, String movieImage) {
         movieId = movieAPIid;
         title = movieTitle;
         releaseDate = movieDate;
@@ -29,7 +29,7 @@ public class FavoriteMovie {
         imagePath = movieImage;
     }
 
-    FavoriteMovie(int dataId, int movieAPIid, String movieTitle, String movieDate, float movieRating, String movieDesc, String movieImage) {
+    public FavoriteMovie(int dataId, int movieAPIid, String movieTitle, String movieDate, float movieRating, String movieDesc, String movieImage) {
         id = dataId;
         movieId = movieAPIid;
         title = movieTitle;
@@ -81,5 +81,13 @@ public class FavoriteMovie {
 
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public int getMovieId() {
+        return movieId;
+    }
+
+    public void setMovieId(int movieId) {
+        this.movieId = movieId;
     }
 }

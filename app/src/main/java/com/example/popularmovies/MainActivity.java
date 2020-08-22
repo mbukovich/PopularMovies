@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.popularmovies.database.AppDatabase;
 import com.example.popularmovies.utilities.MovieJsonUtil;
 import com.example.popularmovies.utilities.NetworkUtils;
 
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     MovieQueryTask backgroundQueryTask;
 
     HashMap<String, String[]> dataMap;
+
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +79,9 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         String sortSelection = getString(R.string.popular_path);
         backgroundQueryTask = new MovieQueryTask();
         backgroundQueryTask.execute(sortSelection);
+
+        // Here we initialize our favorite movies database
+        mDb = AppDatabase.getInstance(getApplicationContext());
     }
 
     @Override
@@ -83,19 +89,38 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         if (!dataMap.isEmpty()) {
             // We get the data to send to the Movie Detail Activity from our HashMap and store it into
             // a String array as long as our HashMap has data
-            String[] details = new String[6];
+            String[] details = new String[7];
             details[0] = dataMap.get(this.getResources().getString(R.string.map_poster))[itemNumber];
             details[1] = dataMap.get(this.getResources().getString(R.string.map_id))[itemNumber];
             details[2] = dataMap.get(this.getResources().getString(R.string.map_release))[itemNumber];
             details[3] = dataMap.get(this.getResources().getString(R.string.map_synopsis))[itemNumber];
             details[4] = dataMap.get(this.getResources().getString(R.string.map_vote_avg))[itemNumber];
             details[5] = dataMap.get(this.getResources().getString(R.string.map_title))[itemNumber];
+            // We also pass along whether or not the movie is in the favorites database
+            details[6] = isMovieFavorite(details[1]);
 
             // Now we create the intent and pass the String array to the Movie Detail Activity
             Intent detailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
             detailIntent.putExtra("array",details);
             startActivity(detailIntent);
         }
+    }
+
+    private String isMovieFavorite(String detail) {
+        // TODO write logic to determine if a movie id is a favorite in the database
+        return "false";
+    }
+
+    private void populateMapFromDb() {
+        // TODO add code to populate the map variable with data from the favorites database
+        int number = 10; // This variable gets the number of items in the database
+        dataMap = new HashMap<String, String[]>();
+        String[] posters = new String[number];
+        String[] movieIds = new String[number];
+        String[] releaseDates = new String[number];
+        String[] overviews = new String[number];
+        String[] averageRatings = new String[number];
+        String[] movieTitles = new String[number];
     }
 
     public class MovieQueryTask extends AsyncTask<String, Void, HashMap<String, String[]>> {
@@ -133,14 +158,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         @Override
         protected void onPostExecute(HashMap<String, String[]> map) {
             progressBar.setVisibility(View.INVISIBLE);
-            System.out.println(map.toString());
             if (!map.isEmpty()) {
                 // If we obtained data from the connection, we send the image path to our recycler view.
                 movieAdapter.setPosters(map.get(MainActivity.this.getResources().getString(R.string.map_poster)));
             }
             else {
                 // This block executes to display an error message if no data was retrieved
-                System.out.println("testing to see if this block is being executed.");
                 movieRecycler.setVisibility(View.INVISIBLE);
                 errorTextView.setText(MainActivity.this.getResources().getString(R.string.error_no_data));
                 errorTextView.setVisibility(View.VISIBLE);
@@ -159,9 +182,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 backgroundQueryTask = new MovieQueryTask();
                 backgroundQueryTask.execute(MainActivity.this.getResources().getString(R.string.popular_path));
             }
-            else {
+            else if (pos == 1) {
                 backgroundQueryTask = new MovieQueryTask();
                 backgroundQueryTask.execute(MainActivity.this.getResources().getString(R.string.rating_path));
+            }
+            else {
+                // TODO add code to populate the recycler with movie favorites
             }
         }
 
