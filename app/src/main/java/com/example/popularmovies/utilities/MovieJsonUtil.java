@@ -56,4 +56,52 @@ public class MovieJsonUtil {
 
         return result;
     }
+
+    public static String[] getVideoDataFromJson(String jsonString) throws JSONException {
+        // We create a Json object in order to parse the data
+        JSONObject videoJsonObj = new JSONObject(jsonString);
+
+        // We check for errors. If there is an error, the json data will not have "results"
+        if (!videoJsonObj.has("results")) {
+            return null;
+        }
+
+        // We get a JSON Array of JSON Objects
+        JSONArray videoArray = videoJsonObj.getJSONArray("results");
+        int arraySize = videoArray.length();
+
+        // Now we create a String array to store our data
+        String[] results = new String[arraySize];
+
+        // Now we loop through the results
+        for (int i = 0; i < arraySize; i++)
+            results[i] = videoArray.getJSONObject(i).getString("key");
+
+        return results;
+    }
+
+    public static String[][] getReviewDataFromJson(String jsonString) throws JSONException {
+        // We create a Json object in order to parse the data
+        JSONObject reviewJsonObj = new JSONObject(jsonString);
+
+        // We check for errors. If there is an error, the json data will not have "results"
+        if (!reviewJsonObj.has("results")) {
+            return null;
+        }
+
+        // We get a JSON Array of JSON Objects
+        JSONArray reviewArray = reviewJsonObj.getJSONArray("results");
+        int arraySize = reviewArray.length();
+
+        // Now we create a String array to store our data
+        String[][] results = new String[2][arraySize];
+
+        // Now we loop through the results
+        for (int i = 0; i < arraySize; i++) {
+            results[0][i] = reviewArray.getJSONObject(i).getString("author")
+            results[1][i] = reviewArray.getJSONObject(i).getString("content");
+        }
+
+        return results;
+    }
 }

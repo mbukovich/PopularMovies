@@ -46,6 +46,41 @@ public class NetworkUtils {
         return url;
     }
 
+    public static URL buildVideosUrl(Context c, String movieId){
+        Uri builtUri = Uri.parse(c.getResources().getString(R.string.base_url)).buildUpon()
+                .appendPath(c.getResources().getString(R.string.movie_path))
+                .appendPath(movieId)
+                .appendPath(c.getResources().getString(R.string.video_path))
+                .appendQueryParameter(c.getResources().getString(R.string.key_param), c.getResources().getString(R.string.tmdb_key))
+                .appendQueryParameter(c.getResources().getString(R.string.language_param), c.getResources().getString(R.string.language))
+                .build();
+        URL url = null;
+        try {
+            url = new URL(builtUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
+    public static URL buildReviewsUrl(Context c, String movieId){
+        Uri builtUri = Uri.parse(c.getResources().getString(R.string.base_url)).buildUpon()
+                .appendPath(c.getResources().getString(R.string.movie_path))
+                .appendPath(movieId)
+                .appendPath(c.getResources().getString(R.string.review_path))
+                .appendQueryParameter(c.getResources().getString(R.string.key_param), c.getResources().getString(R.string.tmdb_key))
+                .appendQueryParameter(c.getResources().getString(R.string.language_param), c.getResources().getString(R.string.language))
+                .appendQueryParameter(c.getResources().getString(R.string.page_param), c.getResources().getString(R.string.page))
+                .build();
+        URL url = null;
+        try {
+            url = new URL(builtUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
     public static String getResponseFromHttpUrl(URL url) throws IOException {
         HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
         urlConnection.connect();

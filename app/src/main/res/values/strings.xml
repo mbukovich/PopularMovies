@@ -13,6 +13,8 @@
     <string name="language">en-US</string>
     <string name="page">1</string>
     <string name="image_size">w185</string>
+    <string name="video_path">videos</string>
+    <string name="review_path">reviews</string>
 
     <!-- Query Parameters -->
     <string name="key_param">api_key</string>
@@ -41,5 +43,6 @@
     <!-- error messages -->
     <string name="error_no_data">Error retrieving data.</string>
     <string name="error_nothing_selected">Please select a sort option.</string>
+    <string name="empty_database">There are no favorites to display.</string>
 
 </resources>

@@ -1,9 +1,15 @@
 package com.example.popularmovies;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.AsyncTaskLoader;
+import androidx.loader.content.Loader;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -14,9 +20,11 @@ import com.example.popularmovies.database.FavoriteMovie;
 import com.example.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
 import java.net.URL;
 
-public class MovieDetailActivity extends AppCompatActivity {
+public class MovieDetailActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<String> {
 
     ImageView posterView;
 
@@ -31,6 +39,10 @@ public class MovieDetailActivity extends AppCompatActivity {
     private String[] movieData;
 
     private AppDatabase mDb;
+
+    private static final int VIDEO_QUERY_LOADER = 42;
+    private static final int REVIEW_QUERY_LOADER = 43;
+    private static final String QUERY_URL = "query";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,15 +85,16 @@ public class MovieDetailActivity extends AppCompatActivity {
             titleView.setText(movieData[5]);
 
             // TODO if the device has data connectivity, then start an Async Task to query the API to get video trailers
+            Bundle videoBundle = new Bundle();
             // TODO if the device has data connectivity, then start an Async Task to query the API to get video reviews
 
             mDb = AppDatabase.getInstance(getApplicationContext());
         }
         else {
-            releaseDateView.setText("No Data Found.");
-            synopsisView.setText("No Data Found.");
-            ratingView.setText("No Data Found.");
-            titleView.setText("No Data Found.");
+            releaseDateView.setText(this.getResources().getString(R.string.error_no_data));
+            synopsisView.setText(this.getResources().getString(R.string.error_no_data));
+            ratingView.setText(this.getResources().getString(R.string.error_no_data));
+            titleView.setText(this.getResources().getString(R.string.error_no_data));
 
             favoriteButton.setVisibility(View.INVISIBLE);
         }
@@ -111,5 +124,47 @@ public class MovieDetailActivity extends AppCompatActivity {
             });
             favoriteButton.setText(this.getResources().getString(R.string.unfavorite));
         }
+    }
+
+    @NonNull
+    @Override
+    public Loader<String> onCreateLoader(int id, @Nullable final Bundle args) {
+        return new AsyncTaskLoader<String>(this) {
+            @Override
+            protected void onStartLoading() {
+                super.onStartLoading();
+                if (args == null) return;
+            }
+
+            @Nullable
+            @Override
+            public String loadInBackground() {
+                String queryUrl = args.getString(QUERY_URL);
+                if (queryUrl == null || TextUtils.isEmpty(queryUrl)) return null;
+                try {
+                    URL url = new URL(queryUrl);
+                    return NetworkUtils.getResponseFromHttpUrl(url);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<String> loader, String data) {
+        int id = loader.getId();
+        if (id == VIDEO_QUERY_LOADER) {
+            // do stuff with the video JSON data
+        }
+        else if (id == REVIEW_QUERY_LOADER) {
+            // do stuff with the review JSON data
+        }
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<String> loader) {
+
     }
 }

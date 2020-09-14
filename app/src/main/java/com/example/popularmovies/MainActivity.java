@@ -1,6 +1,9 @@
 package com.example.popularmovies;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -8,6 +11,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,12 +20,11 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.popularmovies.database.AppDatabase;
+import com.example.popularmovies.database.FavoriteMovie;
 import com.example.popularmovies.utilities.MovieJsonUtil;
 import com.example.popularmovies.utilities.NetworkUtils;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -41,7 +44,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     HashMap<String, String[]> dataMap;
 
-    private AppDatabase mDb;
+    private MainViewModel viewModel;
+
+    private static final String DATA_MAP = "dataMap";
+    private static final String SPINNER_SELECTION = "spinnerSelection";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,10 +68,9 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         sortSpinner.setAdapter(sortAdapter);
         sortSpinner.setOnItemSelectedListener(new SpinnerActivity());
 
+        // Set up our recycler view
         movieRecycler = (RecyclerView) findViewById(R.id.rv_movieGrid); // finding our recycler view
-
         movieAdapter = new MovieAdapter(this);
-
         movieRecycler.setAdapter(movieAdapter);
 
         // The following adapts the grid to the screen width.
@@ -76,12 +81,33 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         movieRecycler.setLayoutManager(new GridLayoutManager(this, colNum));
         movieRecycler.setHasFixedSize(true);
 
-        String sortSelection = getString(R.string.popular_path);
-        backgroundQueryTask = new MovieQueryTask();
-        backgroundQueryTask.execute(sortSelection);
+        // If we are returning after a life cycle change and there is data stored in savedInstanceState,
+        // we should apply this data to our UI so that we don't need to unnecessarily query the API
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(DATA_MAP)) {
+                dataMap = (HashMap<String, String[]>) savedInstanceState.getSerializable(DATA_MAP);
+                movieAdapter.setPosters(dataMap.get(MainActivity.this.getResources().getString(R.string.map_poster)));
+            }
+            if (savedInstanceState.containsKey(SPINNER_SELECTION))
+                sortSpinner.setSelection(savedInstanceState.getInt(SPINNER_SELECTION, 0));
+        }
+        else {
+            // If this is the first time the activity launches, we should perform the first API query.
+            String sortSelection = getString(R.string.popular_path);
+            backgroundQueryTask = new MovieQueryTask();
+            backgroundQueryTask.execute(sortSelection);
+        }
 
-        // Here we initialize our favorite movies database
-        mDb = AppDatabase.getInstance(getApplicationContext());
+
+
+        // Here we initialize our view model
+        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        viewModel.getFavorites().observe(this, new Observer<List<FavoriteMovie>>() {
+            @Override
+            public void onChanged(List<FavoriteMovie> favoriteMovies) {
+                // Do nothing for now
+            }
+        });
     }
 
     @Override
@@ -97,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             details[4] = dataMap.get(this.getResources().getString(R.string.map_vote_avg))[itemNumber];
             details[5] = dataMap.get(this.getResources().getString(R.string.map_title))[itemNumber];
             // We also pass along whether or not the movie is in the favorites database
-            details[6] = isMovieFavorite(details[1]);
+            details[6] = isMovieFavorite(details[1], viewModel.getFavorites().getValue());
 
             // Now we create the intent and pass the String array to the Movie Detail Activity
             Intent detailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
@@ -106,14 +132,17 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         }
     }
 
-    private String isMovieFavorite(String detail) {
-        // TODO write logic to determine if a movie id is a favorite in the database
+    private String isMovieFavorite(String movieId, List<FavoriteMovie> favList) {
+        // logic to determine if a movie id is a favorite in the database
+        for (FavoriteMovie fav : favList) {
+            if (String.valueOf(fav.getMovieId()) == movieId) return "true";
+        }
         return "false";
     }
 
-    private void populateMapFromDb() {
-        // TODO add code to populate the map variable with data from the favorites database
-        int number = 10; // This variable gets the number of items in the database
+    private void populateMapFromDb(List<FavoriteMovie> favorites) {
+        int number = favorites.size(); // This variable gets the number of items in the database
+
         dataMap = new HashMap<String, String[]>();
         String[] posters = new String[number];
         String[] movieIds = new String[number];
@@ -121,6 +150,24 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         String[] overviews = new String[number];
         String[] averageRatings = new String[number];
         String[] movieTitles = new String[number];
+
+        for (int i = 0; i < number; i++) {
+            // fill arrays from the favorites list
+            posters[i] = favorites.get(i).getImagePath();
+            movieIds[i] = String.valueOf(favorites.get(i).getMovieId());
+            releaseDates[i] = favorites.get(i).getReleaseDate();
+            overviews[i] = favorites.get(i).getSynopsis();
+            averageRatings[i] = String.valueOf(favorites.get(i).getRating());
+            movieTitles[i] = favorites.get(i).getTitle();
+        }
+
+        // Add arrays to the dataMap
+        dataMap.put(getResources().getString(R.string.map_poster), posters);
+        dataMap.put(getResources().getString(R.string.map_id), movieIds);
+        dataMap.put(getResources().getString(R.string.map_release), releaseDates);
+        dataMap.put(getResources().getString(R.string.map_synopsis), overviews);
+        dataMap.put(getResources().getString(R.string.map_vote_avg), averageRatings);
+        dataMap.put(getResources().getString(R.string.map_title), movieTitles);
     }
 
     public class MovieQueryTask extends AsyncTask<String, Void, HashMap<String, String[]>> {
@@ -160,6 +207,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             progressBar.setVisibility(View.INVISIBLE);
             if (!map.isEmpty()) {
                 // If we obtained data from the connection, we send the image path to our recycler view.
+                movieRecycler.setVisibility(View.VISIBLE);
+                errorTextView.setVisibility(View.INVISIBLE);
                 movieAdapter.setPosters(map.get(MainActivity.this.getResources().getString(R.string.map_poster)));
             }
             else {
@@ -178,17 +227,30 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         @Override
         public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
-            if (pos == 0) {
-                backgroundQueryTask = new MovieQueryTask();
-                backgroundQueryTask.execute(MainActivity.this.getResources().getString(R.string.popular_path));
-            }
-            else if (pos == 1) {
-                backgroundQueryTask = new MovieQueryTask();
-                backgroundQueryTask.execute(MainActivity.this.getResources().getString(R.string.rating_path));
-            }
-            else {
-                // TODO add code to populate the recycler with movie favorites
-            }
+                if (pos == 0) {
+                    backgroundQueryTask = new MovieQueryTask();
+                    backgroundQueryTask.execute(MainActivity.this.getResources().getString(R.string.popular_path));
+                }
+                else if (pos == 1) {
+                    backgroundQueryTask = new MovieQueryTask();
+                    backgroundQueryTask.execute(MainActivity.this.getResources().getString(R.string.rating_path));
+                }
+                else {
+                    // populate the recycler and hashMap with movie favorites if the database contains data
+                    // otherwise, display error text
+                    List<FavoriteMovie> favoriteList = viewModel.getFavorites().getValue();
+                    if (favoriteList != null && !favoriteList.isEmpty()) {
+                        movieRecycler.setVisibility(View.VISIBLE);
+                        errorTextView.setVisibility(View.INVISIBLE);
+                        populateMapFromDb(favoriteList);
+                        movieAdapter.setPosters(dataMap.get(MainActivity.this.getResources().getString(R.string.map_poster)));
+                    }
+                    else {
+                        movieRecycler.setVisibility(View.INVISIBLE);
+                        errorTextView.setText(MainActivity.this.getResources().getString(R.string.empty_database));
+                        errorTextView.setVisibility(View.VISIBLE);
+                    }
+                }
         }
 
         @Override
@@ -196,5 +258,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             errorTextView.setText(R.string.error_nothing_selected);
             errorTextView.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        outState.putSerializable(DATA_MAP, dataMap);
+        outState.putInt(SPINNER_SELECTION, sortSpinner.getSelectedItemPosition());
     }
 }
