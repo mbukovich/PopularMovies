@@ -8,17 +8,22 @@ import androidx.loader.content.AsyncTaskLoader;
 import androidx.loader.content.Loader;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.popularmovies.database.AppDatabase;
 import com.example.popularmovies.database.FavoriteMovie;
+import com.example.popularmovies.utilities.MovieJsonUtil;
 import com.example.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.net.URL;
@@ -32,8 +37,11 @@ public class MovieDetailActivity extends AppCompatActivity implements
     TextView releaseDateView;
     TextView ratingView;
     TextView synopsisView;
+    TextView reviewView;
 
     Button favoriteButton;
+
+    ListView trailerListView;
 
     private Boolean isFavorite;
     private String[] movieData;
@@ -56,6 +64,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
         ratingView = (TextView) findViewById(R.id.tv_detail_voter_rating);
         synopsisView = (TextView) findViewById(R.id.tv_detail_synopsis);
         favoriteButton = (Button) findViewById(R.id.btn_favorite);
+        reviewView = (TextView) findViewById(R.id.tv_reviews);
+        trailerListView = (ListView) findViewById(R.id.lv_trailers);
 
         // We get the intent that was used to start this activity
         Intent intent = getIntent();
@@ -126,6 +136,38 @@ public class MovieDetailActivity extends AppCompatActivity implements
         }
     }
 
+    private String prepareReviews(String[][] reviewStrings) {
+        // build a String array into a continuous String to put into a textView
+        String result = "";
+        for (int i = 0; i < reviewStrings[0].length; i++) {
+            result = result + "\"" + reviewStrings[1][i] + "\" \n" + "author: " + reviewStrings[0][i] + "\n \n";
+        }
+        return result;
+    }
+
+    private void buildTrailerButtons(String[] trailerStrings) {
+        // build trailer buttons
+        for (int i = 0; i < trailerStrings.length; i++) {
+            // builds a youtube URL and creates an intent that opens it
+            // also inserts a button into the ListView for each trailer
+            final URL trailerURL = NetworkUtils.buildTrailerURL(this, trailerStrings[i]);
+
+            Button trailerButton = new Button(this);
+            trailerButton.setText("Trailer " + Integer.toString(i + 1));
+            trailerButton.setPadding(5, 20, 5, 20);
+            trailerButton.setTextSize(15);
+            trailerButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Uri uri = Uri.parse(trailerURL.toString());
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    if (intent.resolveActivity(getPackageManager()) != null) startActivity(intent);
+                }
+            });
+            trailerListView.addView(trailerButton);
+        }
+    }
+
     @NonNull
     @Override
     public Loader<String> onCreateLoader(int id, @Nullable final Bundle args) {
@@ -159,12 +201,20 @@ public class MovieDetailActivity extends AppCompatActivity implements
             // do stuff with the video JSON data
         }
         else if (id == REVIEW_QUERY_LOADER) {
-            // do stuff with the review JSON data
+            // parse the JSON data and load it into the reviewView text view
+            try {
+                String[][] reviewData = MovieJsonUtil.getReviewDataFromJson(data);
+                String reviews = prepareReviews(reviewData);
+                if (reviews == "") reviewView.setText(R.string.no_reviews);
+                else reviewView.setText(reviews);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                reviewView.setText(R.string.reviews_error);
+            }
         }
     }
 
     @Override
     public void onLoaderReset(@NonNull Loader<String> loader) {
-
     }
 }

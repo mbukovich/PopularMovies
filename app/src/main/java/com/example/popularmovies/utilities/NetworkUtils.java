@@ -81,6 +81,20 @@ public class NetworkUtils {
         return url;
     }
 
+    public static URL buildTrailerURL(Context c, String trailerKey) {
+        Uri builtUri = Uri.parse(c.getResources().getString(R.string.youtube_base_path)).buildUpon()
+                .appendPath(c.getResources().getString(R.string.youtube_watch_path))
+                .appendQueryParameter(c.getResources().getString(R.string.trailer_query_v), trailerKey)
+                .build();
+        URL url = null;
+        try {
+            url = new URL(builtUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
     public static String getResponseFromHttpUrl(URL url) throws IOException {
         HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
         urlConnection.connect();

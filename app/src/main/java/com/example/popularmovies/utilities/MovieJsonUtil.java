@@ -98,7 +98,7 @@ public class MovieJsonUtil {
 
         // Now we loop through the results
         for (int i = 0; i < arraySize; i++) {
-            results[0][i] = reviewArray.getJSONObject(i).getString("author")
+            results[0][i] = reviewArray.getJSONObject(i).getString("author");
             results[1][i] = reviewArray.getJSONObject(i).getString("content");
         }
 

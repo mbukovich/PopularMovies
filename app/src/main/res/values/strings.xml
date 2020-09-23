@@ -15,6 +15,8 @@
     <string name="image_size">w185</string>
     <string name="video_path">videos</string>
     <string name="review_path">reviews</string>
+    <string name="youtube_base_path">https://www.youtube.com</string>
+    <string name="youtube_watch_path">watch</string>
 
     <!-- Query Parameters -->
     <string name="key_param">api_key</string>
@@ -44,5 +46,8 @@
     <string name="error_no_data">Error retrieving data.</string>
     <string name="error_nothing_selected">Please select a sort option.</string>
     <string name="empty_database">There are no favorites to display.</string>
+    <string name="no_reviews">-No Reviews to Show-</string>
+    <string name="reviews_error">-Error Getting Reviews-</string>
+    <string name="trailer_query_v">v</string>
 
 </resources>

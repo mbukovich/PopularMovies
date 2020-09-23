@@ -100,8 +100,8 @@
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:text="Reviews: " />
-            <ListView
-                android:id="@+id/lv_reviews"
+            <TextView
+                android:id="@+id/tv_reviews"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp" />
