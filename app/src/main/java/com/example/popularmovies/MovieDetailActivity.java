@@ -10,6 +10,7 @@ import androidx.loader.content.Loader;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -45,12 +46,17 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     private Boolean isFavorite;
     private String[] movieData;
+    private String[] trailerKeys;
 
     private AppDatabase mDb;
 
     private static final int VIDEO_QUERY_LOADER = 42;
     private static final int REVIEW_QUERY_LOADER = 43;
     private static final String QUERY_URL = "query";
+    private static final String TRAILER_KEYS_ARRAY = "keys";
+    private static final String REVIEW_TEXT = "reviews";
+    private static final String MOVIE_DATA_ARRAY = "movieData";
+    private static final String IS_IT_A_FAVORITE = "isFavorite";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,9 +100,14 @@ public class MovieDetailActivity extends AppCompatActivity implements
             ratingView.setText(movieData[4]);
             titleView.setText(movieData[5]);
 
-            // TODO if the device has data connectivity, then start an Async Task to query the API to get video trailers
+            // start an Async Task Loader to query the API to get video trailers
             Bundle videoBundle = new Bundle();
-            // TODO if the device has data connectivity, then start an Async Task to query the API to get video reviews
+            videoBundle.putString(QUERY_URL, NetworkUtils.buildVideosUrl(this, movieData[1]).toString());
+            LoaderManager.getInstance(this).initLoader(VIDEO_QUERY_LOADER, videoBundle, this);
+            // start an Async Task Loader to query the API to get video reviews
+            Bundle reviewBundle = new Bundle();
+            reviewBundle.putString(QUERY_URL, NetworkUtils.buildReviewsUrl(this, movieData[1]).toString());
+            LoaderManager.getInstance(this).initLoader(REVIEW_QUERY_LOADER, reviewBundle, this);
 
             mDb = AppDatabase.getInstance(getApplicationContext());
         }
@@ -153,7 +164,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
             final URL trailerURL = NetworkUtils.buildTrailerURL(this, trailerStrings[i]);
 
             Button trailerButton = new Button(this);
-            trailerButton.setText("Trailer " + Integer.toString(i + 1));
+            String btnText = "Trailer " + Integer.toString(i + 1);
+            trailerButton.setText(btnText);
             trailerButton.setPadding(5, 20, 5, 20);
             trailerButton.setTextSize(15);
             trailerButton.setOnClickListener(new View.OnClickListener() {
@@ -198,7 +210,13 @@ public class MovieDetailActivity extends AppCompatActivity implements
     public void onLoadFinished(@NonNull Loader<String> loader, String data) {
         int id = loader.getId();
         if (id == VIDEO_QUERY_LOADER) {
-            // do stuff with the video JSON data
+            // parse the JSON data and load it into the activity by adding buttons to the listView
+            try {
+                trailerKeys = MovieJsonUtil.getVideoDataFromJson(data);
+                buildTrailerButtons(trailerKeys);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         else if (id == REVIEW_QUERY_LOADER) {
             // parse the JSON data and load it into the reviewView text view
@@ -216,5 +234,15 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     @Override
     public void onLoaderReset(@NonNull Loader<String> loader) {
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        outState.putStringArray(TRAILER_KEYS_ARRAY, trailerKeys);
+        String text = reviewView.getText().toString();
+        outState.putString(REVIEW_TEXT, text);
+        outState.putStringArray(MOVIE_DATA_ARRAY, movieData);
+        outState.putBoolean(IS_IT_A_FAVORITE, isFavorite);
     }
 }
