@@ -49,5 +49,6 @@
     <string name="no_reviews">-No Reviews to Show-</string>
     <string name="reviews_error">-Error Getting Reviews-</string>
     <string name="trailer_query_v">v</string>
+    <string name="no_trailers">No Trailers</string>
 
 </resources>
