@@ -10,8 +10,7 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "favoriteMovies")
 public class FavoriteMovie {
 
-    @PrimaryKey(autoGenerate = true)
-    private int id;
+    @PrimaryKey
     private int movieId;
     private String title;
     private String releaseDate;
@@ -19,30 +18,13 @@ public class FavoriteMovie {
     private String synopsis;
     private String imagePath;
 
-    @Ignore
-    public FavoriteMovie(int movieAPIid, String movieTitle, String movieDate, float movieRating, String movieDesc, String movieImage) {
-        movieId = movieAPIid;
-        title = movieTitle;
-        releaseDate = movieDate;
-        rating = movieRating;
-        synopsis = movieDesc;
-        imagePath = movieImage;
-    }
-
-    public FavoriteMovie(int dataId, int movieAPIid, String movieTitle, String movieDate, float movieRating, String movieDesc, String movieImage) {
-        id = dataId;
-        movieId = movieAPIid;
-        title = movieTitle;
-        releaseDate = movieDate;
-        rating = movieRating;
-        synopsis = movieDesc;
-        imagePath = movieImage;
-    }
-
-    public int getId() {return id;}
-
-    public void setId(int id) {
-        this.id = id;
+    public FavoriteMovie(int movieId, String title, String releaseDate, float rating, String synopsis, String imagePath) {
+        this.movieId = movieId;
+        this.title = title;
+        this.releaseDate = releaseDate;
+        this.rating = rating;
+        this.synopsis = synopsis;
+        this.imagePath = imagePath;
     }
 
     public String getTitle() {

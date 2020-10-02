@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private String isMovieFavorite(String movieId, List<FavoriteMovie> favList) {
         // logic to determine if a movie id is a favorite in the database
         for (FavoriteMovie fav : favList) {
-            if (String.valueOf(fav.getMovieId()) == movieId) return "true";
+            if (String.valueOf(fav.getMovieId()).equals(movieId)) return "true";
         }
         return "false";
     }

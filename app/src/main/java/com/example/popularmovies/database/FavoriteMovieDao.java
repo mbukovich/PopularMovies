@@ -12,7 +12,7 @@ import java.util.List;
 
 @Dao
 public interface FavoriteMovieDao {
-    @Query("SELECT * FROM favoriteMovies ORDER BY id")
+    @Query("SELECT * FROM favoriteMovies ORDER BY movieId")
     LiveData<List<FavoriteMovie>> loadAllFavoriteMovies();
 
     @Insert

@@ -74,13 +74,12 @@ public class MovieDetailActivity extends AppCompatActivity implements
         reviewView = (TextView) findViewById(R.id.tv_reviews);
         trailerListView = (ListView) findViewById(R.id.lv_trailers);
 
-        // We get the intent that was used to start this activity
-        Intent intent = getIntent();
-
         // If we are returning to onCreate after a life cycle change (such as rotating the device),
         // then we use data from savedInstanceState to refill the views
         if (savedInstanceState != null) {
+            System.out.println("filling data from savedInstanceState.");
             if (savedInstanceState.containsKey(MOVIE_DATA_ARRAY)) {
+                System.out.println("movieData = " + movieData);
                 // fill data from MOVIE_DATA_ARRAY
                 movieData = savedInstanceState.getStringArray(MOVIE_DATA_ARRAY);
                 if (movieData != null && movieData[0] != null) {
@@ -119,51 +118,56 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 }
             }
         }
-        // Now we make sure that the intent contains data and if so, pass that data to the views in the layout
-        if (intent.hasExtra("array") && intent.getStringArrayExtra("array") != null) {
-            movieData = intent.getStringArrayExtra("array");
-            if (movieData != null && movieData[0] != null) {
-                URL imageURL = NetworkUtils.buildPosterUrl(this, movieData[0]);
-                Picasso.get().load(imageURL.toString()).fit().centerInside().into(posterView);
-            }
+        else {
+            // We get the intent that was used to start this activity
+            Intent intent = getIntent();
 
-            if (movieData != null) {
-                if (Objects.equals(movieData[6], "false")) isFavorite = false;
-                else if (Objects.equals(movieData[6], "true")) isFavorite = true;
-            }
+            // Now we make sure that the intent contains data and if so, pass that data to the views in the layout
+            if (intent.hasExtra("array") && intent.getStringArrayExtra("array") != null) {
+                movieData = intent.getStringArrayExtra("array");
+                if (movieData != null && movieData[0] != null) {
+                    URL imageURL = NetworkUtils.buildPosterUrl(this, movieData[0]);
+                    Picasso.get().load(imageURL.toString()).fit().centerInside().into(posterView);
+                }
 
-            // Here we set up the add/remove favorite button
-            favoriteButton.setVisibility(View.VISIBLE);
-            if (isFavorite) {
-                favoriteButton.setText(this.getResources().getString(R.string.unfavorite));
+                if (movieData != null) {
+                    if (Objects.equals(movieData[6], "false")) isFavorite = false;
+                    else if (Objects.equals(movieData[6], "true")) isFavorite = true;
+                }
+
+                // Here we set up the add/remove favorite button
+                favoriteButton.setVisibility(View.VISIBLE);
+                if (isFavorite) {
+                    favoriteButton.setText(this.getResources().getString(R.string.unfavorite));
+                }
+                else {
+                    favoriteButton.setText(this.getResources().getString(R.string.addfavorite));
+                }
+
+                releaseDateView.setText(movieData[2]);
+                synopsisView.setText(movieData[3]);
+                ratingView.setText(movieData[4]);
+                titleView.setText(movieData[5]);
+
+                // start an Async Task Loader to query the API to get video trailers
+                Bundle videoBundle = new Bundle();
+                videoBundle.putString(QUERY_URL, NetworkUtils.buildVideosUrl(this, movieData[1]).toString());
+                LoaderManager.getInstance(this).initLoader(VIDEO_QUERY_LOADER, videoBundle, this).forceLoad();
+                // start an Async Task Loader to query the API to get video reviews
+                Bundle reviewBundle = new Bundle();
+                reviewBundle.putString(QUERY_URL, NetworkUtils.buildReviewsUrl(this, movieData[1]).toString());
+                LoaderManager.getInstance(this).initLoader(REVIEW_QUERY_LOADER, reviewBundle, this).forceLoad();
+
+                mDb = AppDatabase.getInstance(getApplicationContext());
             }
             else {
-                favoriteButton.setText(this.getResources().getString(R.string.addfavorite));
+                releaseDateView.setText(this.getResources().getString(R.string.error_no_data));
+                synopsisView.setText(this.getResources().getString(R.string.error_no_data));
+                ratingView.setText(this.getResources().getString(R.string.error_no_data));
+                titleView.setText(this.getResources().getString(R.string.error_no_data));
+
+                favoriteButton.setVisibility(View.INVISIBLE);
             }
-
-            releaseDateView.setText(movieData[2]);
-            synopsisView.setText(movieData[3]);
-            ratingView.setText(movieData[4]);
-            titleView.setText(movieData[5]);
-
-            // start an Async Task Loader to query the API to get video trailers
-            Bundle videoBundle = new Bundle();
-            videoBundle.putString(QUERY_URL, NetworkUtils.buildVideosUrl(this, movieData[1]).toString());
-            LoaderManager.getInstance(this).initLoader(VIDEO_QUERY_LOADER, videoBundle, this);
-            // start an Async Task Loader to query the API to get video reviews
-            Bundle reviewBundle = new Bundle();
-            reviewBundle.putString(QUERY_URL, NetworkUtils.buildReviewsUrl(this, movieData[1]).toString());
-            LoaderManager.getInstance(this).initLoader(REVIEW_QUERY_LOADER, reviewBundle, this);
-
-            mDb = AppDatabase.getInstance(getApplicationContext());
-        }
-        else {
-            releaseDateView.setText(this.getResources().getString(R.string.error_no_data));
-            synopsisView.setText(this.getResources().getString(R.string.error_no_data));
-            ratingView.setText(this.getResources().getString(R.string.error_no_data));
-            titleView.setText(this.getResources().getString(R.string.error_no_data));
-
-            favoriteButton.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -177,6 +181,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 }
             });
             favoriteButton.setText(this.getResources().getString(R.string.addfavorite));
+            isFavorite = false;
         }
         else {
             final FavoriteMovie favoriteMovie = new FavoriteMovie(Integer.parseInt(movieData[1]),
@@ -186,25 +191,28 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 @Override
                 public void run() {
                     mDb.favoriteMovieDao().insertFavoriteMovie(favoriteMovie);
-                    finish();
                 }
             });
             favoriteButton.setText(this.getResources().getString(R.string.unfavorite));
+            isFavorite = true;
         }
     }
 
     private String prepareReviews(String[][] reviewStrings) {
         // build a String array into a continuous String to put into a textView
+        System.out.println("consolidating reviews.");
         String result = "";
         if (reviewStrings != null) {
             for (int i = 0; i < reviewStrings[0].length; i++) {
                 result = result + "\"" + reviewStrings[1][i] + "\" \n" + "author: " + reviewStrings[0][i] + "\n \n";
             }
         }
+        System.out.println(result);
         return result;
     }
 
     private void buildTrailerButtons(String[] trailerStrings) {
+        System.out.println("starting to build trailer buttons.");
         if (trailerStrings != null) {
             // build trailer buttons if the incoming array is not null
             for (int i = 0; i < trailerStrings.length; i++) {
@@ -226,6 +234,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
                     }
                 });
                 trailerListView.addView(trailerButton);
+                System.out.println("built trailer buttons.");
             }
             if (trailerStrings.length == 0) {
                 // if there are no trailer keys, then we let the user know
@@ -233,6 +242,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 textView.setText(R.string.no_trailers);
                 textView.setPadding(5, 20, 5, 20);
                 trailerListView.addView(textView);
+                System.out.println("no trailers 1.");
             }
         }
         else {
@@ -240,6 +250,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
             textView.setText(R.string.no_trailers);
             textView.setPadding(5, 20, 5, 20);
             trailerListView.addView(textView);
+            System.out.println("no trailers 2.");
         }
     }
 
@@ -258,6 +269,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
             public String loadInBackground() {
                 if (args != null && args.containsKey(QUERY_URL)) {
                     if (args.getString(QUERY_URL) != null) {
+                        System.out.println("starting to query API");
                         String queryUrl = args.getString(QUERY_URL);
                         if (queryUrl == null || TextUtils.isEmpty(queryUrl)) return null;
                         try {
@@ -277,9 +289,12 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     @Override
     public void onLoadFinished(@NonNull Loader<String> loader, String data) {
+        System.out.println("finished querying API.");
         int id = loader.getId();
         if (id == VIDEO_QUERY_LOADER) {
             // parse the JSON data and load it into the activity by adding buttons to the listView
+            System.out.println("parsing JSON data and building trailer buttons.");
+            System.out.println(data);
             try {
                 trailerKeys = MovieJsonUtil.getVideoDataFromJson(data);
                 buildTrailerButtons(trailerKeys);
@@ -289,6 +304,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
         }
         else if (id == REVIEW_QUERY_LOADER) {
             // parse the JSON data and load it into the reviewView text view
+            System.out.println("parsing data and adding reviews to views.");
+            System.out.println(data);
             try {
                 String[][] reviewData = MovieJsonUtil.getReviewDataFromJson(data);
                 String reviews = prepareReviews(reviewData);
@@ -307,6 +324,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        System.out.println("saving the state of the activity");
         super.onSaveInstanceState(outState, outPersistentState);
         outState.putStringArray(TRAILER_KEYS_ARRAY, trailerKeys);
         String text = reviewView.getText().toString();
