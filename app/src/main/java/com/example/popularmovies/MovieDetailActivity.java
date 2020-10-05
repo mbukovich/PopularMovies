@@ -15,6 +15,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -28,6 +29,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class MovieDetailActivity extends AppCompatActivity implements
@@ -43,7 +45,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     Button favoriteButton;
 
-    ListView trailerListView;
+    LinearLayout trailerLinearView;
 
     private Boolean isFavorite;
     private String[] movieData;
@@ -72,14 +74,15 @@ public class MovieDetailActivity extends AppCompatActivity implements
         synopsisView = (TextView) findViewById(R.id.tv_detail_synopsis);
         favoriteButton = (Button) findViewById(R.id.btn_favorite);
         reviewView = (TextView) findViewById(R.id.tv_reviews);
-        trailerListView = (ListView) findViewById(R.id.lv_trailers);
+        trailerLinearView = (LinearLayout) findViewById(R.id.ll_trailers);
 
         // If we are returning to onCreate after a life cycle change (such as rotating the device),
         // then we use data from savedInstanceState to refill the views
         if (savedInstanceState != null) {
             System.out.println("filling data from savedInstanceState.");
+            System.out.println(savedInstanceState);
             if (savedInstanceState.containsKey(MOVIE_DATA_ARRAY)) {
-                System.out.println("movieData = " + movieData);
+                System.out.println("movieData = " + Arrays.toString(movieData));
                 // fill data from MOVIE_DATA_ARRAY
                 movieData = savedInstanceState.getStringArray(MOVIE_DATA_ARRAY);
                 if (movieData != null && movieData[0] != null) {
@@ -99,13 +102,16 @@ public class MovieDetailActivity extends AppCompatActivity implements
             }
             if (savedInstanceState.containsKey(TRAILER_KEYS_ARRAY)) {
                 // create trailer buttons
+                System.out.println(Arrays.toString(savedInstanceState.getStringArray(TRAILER_KEYS_ARRAY)));
                 buildTrailerButtons(savedInstanceState.getStringArray(TRAILER_KEYS_ARRAY));
             }
             if (savedInstanceState.containsKey(REVIEW_TEXT)) {
                 // fill the review textView with text
+                System.out.println(savedInstanceState.getString(REVIEW_TEXT));
                 reviewView.setText(savedInstanceState.getString(REVIEW_TEXT));
             }
             if (savedInstanceState.containsKey(IS_IT_A_FAVORITE))  {
+                System.out.println(Boolean.toString(savedInstanceState.getBoolean(IS_IT_A_FAVORITE)));
                 isFavorite = savedInstanceState.getBoolean(IS_IT_A_FAVORITE);
 
                 // Here we set up the add/remove favorite button
@@ -233,7 +239,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
                         if (intent.resolveActivity(getPackageManager()) != null) startActivity(intent);
                     }
                 });
-                trailerListView.addView(trailerButton);
+                trailerLinearView.addView(trailerButton);
                 System.out.println("built trailer buttons.");
             }
             if (trailerStrings.length == 0) {
@@ -241,7 +247,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 TextView textView = new TextView(this);
                 textView.setText(R.string.no_trailers);
                 textView.setPadding(5, 20, 5, 20);
-                trailerListView.addView(textView);
+                trailerLinearView.addView(textView);
                 System.out.println("no trailers 1.");
             }
         }
@@ -249,7 +255,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
             TextView textView = new TextView(this);
             textView.setText(R.string.no_trailers);
             textView.setPadding(5, 20, 5, 20);
-            trailerListView.addView(textView);
+            trailerLinearView.addView(textView);
             System.out.println("no trailers 2.");
         }
     }
@@ -323,9 +329,9 @@ public class MovieDetailActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         System.out.println("saving the state of the activity");
-        super.onSaveInstanceState(outState, outPersistentState);
+        super.onSaveInstanceState(outState);
         outState.putStringArray(TRAILER_KEYS_ARRAY, trailerKeys);
         String text = reviewView.getText().toString();
         outState.putString(REVIEW_TEXT, text);

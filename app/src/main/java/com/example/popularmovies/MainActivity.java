@@ -106,6 +106,21 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             @Override
             public void onChanged(List<FavoriteMovie> favoriteMovies) {
                 // Do nothing for now
+                int selection = sortSpinner.getSelectedItemPosition();
+                if (selection == 2) {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    if (favoriteMovies != null && !favoriteMovies.isEmpty()) {
+                        movieRecycler.setVisibility(View.VISIBLE);
+                        errorTextView.setVisibility(View.INVISIBLE);
+                        populateMapFromDb(favoriteMovies);
+                        movieAdapter.setPosters(dataMap.get(MainActivity.this.getResources().getString(R.string.map_poster)));
+                    }
+                    else {
+                        movieRecycler.setVisibility(View.INVISIBLE);
+                        errorTextView.setText(MainActivity.this.getResources().getString(R.string.empty_database));
+                        errorTextView.setVisibility(View.VISIBLE);
+                    }
+                }
             }
         });
     }
@@ -238,6 +253,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 else {
                     // populate the recycler and hashMap with movie favorites if the database contains data
                     // otherwise, display error text
+                    progressBar.setVisibility(View.INVISIBLE);
                     List<FavoriteMovie> favoriteList = viewModel.getFavorites().getValue();
                     if (favoriteList != null && !favoriteList.isEmpty()) {
                         movieRecycler.setVisibility(View.VISIBLE);

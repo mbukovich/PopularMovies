@@ -88,8 +88,9 @@
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:text="Trailers: " />
-            <ListView
-                android:id="@+id/lv_trailers"
+            <LinearLayout
+                android:orientation="vertical"
+                android:id="@+id/ll_trailers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp" />
