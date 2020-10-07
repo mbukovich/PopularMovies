@@ -79,10 +79,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
         // If we are returning to onCreate after a life cycle change (such as rotating the device),
         // then we use data from savedInstanceState to refill the views
         if (savedInstanceState != null) {
-            System.out.println("filling data from savedInstanceState.");
-            System.out.println(savedInstanceState);
             if (savedInstanceState.containsKey(MOVIE_DATA_ARRAY)) {
-                System.out.println("movieData = " + Arrays.toString(movieData));
                 // fill data from MOVIE_DATA_ARRAY
                 movieData = savedInstanceState.getStringArray(MOVIE_DATA_ARRAY);
                 if (movieData != null && movieData[0] != null) {
@@ -102,16 +99,13 @@ public class MovieDetailActivity extends AppCompatActivity implements
             }
             if (savedInstanceState.containsKey(TRAILER_KEYS_ARRAY)) {
                 // create trailer buttons
-                System.out.println(Arrays.toString(savedInstanceState.getStringArray(TRAILER_KEYS_ARRAY)));
                 buildTrailerButtons(savedInstanceState.getStringArray(TRAILER_KEYS_ARRAY));
             }
             if (savedInstanceState.containsKey(REVIEW_TEXT)) {
                 // fill the review textView with text
-                System.out.println(savedInstanceState.getString(REVIEW_TEXT));
                 reviewView.setText(savedInstanceState.getString(REVIEW_TEXT));
             }
             if (savedInstanceState.containsKey(IS_IT_A_FAVORITE))  {
-                System.out.println(Boolean.toString(savedInstanceState.getBoolean(IS_IT_A_FAVORITE)));
                 isFavorite = savedInstanceState.getBoolean(IS_IT_A_FAVORITE);
 
                 // Here we set up the add/remove favorite button
@@ -206,19 +200,16 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     private String prepareReviews(String[][] reviewStrings) {
         // build a String array into a continuous String to put into a textView
-        System.out.println("consolidating reviews.");
         String result = "";
         if (reviewStrings != null) {
             for (int i = 0; i < reviewStrings[0].length; i++) {
                 result = result + "\"" + reviewStrings[1][i] + "\" \n" + "author: " + reviewStrings[0][i] + "\n \n";
             }
         }
-        System.out.println(result);
         return result;
     }
 
     private void buildTrailerButtons(String[] trailerStrings) {
-        System.out.println("starting to build trailer buttons.");
         if (trailerStrings != null) {
             // build trailer buttons if the incoming array is not null
             for (int i = 0; i < trailerStrings.length; i++) {
@@ -240,7 +231,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
                     }
                 });
                 trailerLinearView.addView(trailerButton);
-                System.out.println("built trailer buttons.");
             }
             if (trailerStrings.length == 0) {
                 // if there are no trailer keys, then we let the user know
@@ -248,7 +238,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 textView.setText(R.string.no_trailers);
                 textView.setPadding(5, 20, 5, 20);
                 trailerLinearView.addView(textView);
-                System.out.println("no trailers 1.");
             }
         }
         else {
@@ -256,7 +245,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
             textView.setText(R.string.no_trailers);
             textView.setPadding(5, 20, 5, 20);
             trailerLinearView.addView(textView);
-            System.out.println("no trailers 2.");
         }
     }
 
@@ -275,7 +263,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
             public String loadInBackground() {
                 if (args != null && args.containsKey(QUERY_URL)) {
                     if (args.getString(QUERY_URL) != null) {
-                        System.out.println("starting to query API");
                         String queryUrl = args.getString(QUERY_URL);
                         if (queryUrl == null || TextUtils.isEmpty(queryUrl)) return null;
                         try {
@@ -295,30 +282,40 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     @Override
     public void onLoadFinished(@NonNull Loader<String> loader, String data) {
-        System.out.println("finished querying API.");
         int id = loader.getId();
         if (id == VIDEO_QUERY_LOADER) {
             // parse the JSON data and load it into the activity by adding buttons to the listView
-            System.out.println("parsing JSON data and building trailer buttons.");
-            System.out.println(data);
-            try {
-                trailerKeys = MovieJsonUtil.getVideoDataFromJson(data);
-                buildTrailerButtons(trailerKeys);
-            } catch (JSONException e) {
-                e.printStackTrace();
+            // as long as the string from the API query contains data
+            if (data != null) {
+                try {
+                    trailerKeys = MovieJsonUtil.getVideoDataFromJson(data);
+                    buildTrailerButtons(trailerKeys);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                TextView textView = new TextView(this);
+                textView.setText(R.string.no_trailers);
+                textView.setPadding(5, 20, 5, 20);
+                trailerLinearView.addView(textView);
             }
         }
         else if (id == REVIEW_QUERY_LOADER) {
             // parse the JSON data and load it into the reviewView text view
-            System.out.println("parsing data and adding reviews to views.");
-            System.out.println(data);
-            try {
-                String[][] reviewData = MovieJsonUtil.getReviewDataFromJson(data);
-                String reviews = prepareReviews(reviewData);
-                if (Objects.equals(reviews, "")) reviewView.setText(R.string.no_reviews);
-                else reviewView.setText(reviews);
-            } catch (JSONException e) {
-                e.printStackTrace();
+            // as long as the string from the API query contains data
+            if (data != null) {
+                try {
+                    String[][] reviewData = MovieJsonUtil.getReviewDataFromJson(data);
+                    String reviews = prepareReviews(reviewData);
+                    if (Objects.equals(reviews, "")) reviewView.setText(R.string.no_reviews);
+                    else reviewView.setText(reviews);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    reviewView.setText(R.string.reviews_error);
+                }
+            }
+            else {
                 reviewView.setText(R.string.reviews_error);
             }
         }
@@ -330,7 +327,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        System.out.println("saving the state of the activity");
         super.onSaveInstanceState(outState);
         outState.putStringArray(TRAILER_KEYS_ARRAY, trailerKeys);
         String text = reviewView.getText().toString();
